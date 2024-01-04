@@ -2,6 +2,7 @@ const connectDB = require('./db');
 const express = require('express');
 const cors = require('cors');
 const userRouter = require('./routes/user');
+const chatRouter = require('./routes/chat');
 const dotenv = require('dotenv').config();
 
 connectDB()
@@ -13,6 +14,7 @@ connectDB()
         app.use(cors());
 
         app.use('/user',userRouter);
+        app.use('/user/chat',chatRouter);
 
         app.listen(process.env.PORT || 2005, () => {
             console.log(`Server started @ ${process.env.PORT || 2005}`);
