@@ -80,10 +80,63 @@ chatRouter.put('/addgroupmember', userLogedIn, async (req, res) => {
 
         const newMember = JSON.parse(req.body.newMember);
 
-        await Chat.findOneAndUpdate({ _id: chatId }, { receivers: { $push: newMember } })
-            .then((data) => {
-                res.status(200).json(data);
-            });
+        const isChat = await Chat.findOne({ _id: chatId });
+
+        let isMemberFound = false;
+        newMember.forEach((element) => {
+            isChat.receivers.some((user) => {
+                if (user._id == element) {
+                    isMemberFound = true;
+                }
+            })
+            if (!isMemberFound) {
+                isChat.receivers.push(element);
+            }
+        });
+
+        await isChat.save();
+        await isChat.populate("receivers", "-password");
+        res.status(200).send(isChat);
+    } catch (error) {
+        return res.status(500).json(error.message);
+    }
+})
+
+//remove group member : 
+chatRouter.delete('/removegroupmember/:deleteId', userLogedIn, async (req, res) => {
+    try {
+        const { chatId } = req.body;
+
+        const isChat = await Chat.findOne({ _id: chatId });
+
+        if (!isChat) return res.status(401).json("Group not found!!");
+
+        for (i in isChat.receivers) {
+            if (isChat.receivers[i] == req.params.deleteId) {
+                await isChat.receivers.splice(i, 1);
+                break;
+            }
+        }
+
+        await isChat.save();
+        res.status(200).send("Member deleted successfully!!");
+    } catch (error) {
+        return res.status(500).json(error.message);
+    }
+})
+
+//rename group name:
+chatRouter.put('/renamegroupname', userLogedIn, async (req, res) => {
+    try {
+        const { chatId, groupNewName } = req.body;
+
+        const isChat = await Chat.findOne({ _id: chatId });
+
+        if (!isChat) return res.status(401).json("Group not found!!");
+
+        isChat.groupName = groupNewName;
+        isChat.save();
+        res.status(200).send("name changed successfully!!");
     } catch (error) {
         return res.status(500).json(error.message);
     }
