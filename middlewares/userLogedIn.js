@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const userLogedIn = async (req, res, next) => {
     try {
         const authHeader = req.header('Authorization');
+
+        if (!authHeader) return res.status(401).json("Header not found!!");
+
         const token = authHeader.split(" ")[1];
 
         if (!token) return res.status(401).json("You are not logged-in!! please login first!!");
