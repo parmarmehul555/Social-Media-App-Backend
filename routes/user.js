@@ -6,6 +6,7 @@ const User = require('../model/User');
 const userLogedIn = require('../middlewares/userLogedIn');
 const upload = require('../middlewares/multer');
 const uploadCloudinary = require('../middlewares/cloudnery');
+const { default: mongoose } = require('mongoose');
 
 //Sign-up Route :
 userRouter.post('/signup', async (req, res) => {
@@ -63,7 +64,7 @@ userRouter.post('/login', async (req, res) => {
     }
 });
 
-//Get User details : 
+//Get User : 
 userRouter.get('/userdetails', userLogedIn, async (req, res) => {
     try {
         const isUser = await User.findOne({ _id: req.user.id });
@@ -148,6 +149,88 @@ userRouter.put('/edituserprofile', userLogedIn, upload.single('user-profile-img'
     } catch (error) {
         return res.status(500).json({ "ERROR": `Internal server error while changeing profile :: ${error}` });
     }
-})
+});
+
+//Follow User :
+userRouter.put('/follow/:userId', userLogedIn, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.userId)) return res.status(400).json({ "ERROR": "Invalid user id!!" });
+
+        if (req.params.userId == req.user.id) return res.status(400).json({ "ERROR": "You can not follow your self!!" });
+
+        const newFollowing = await User.findOne({ _id: req.user.id });
+
+        if (!newFollowing) return res.status(400).json({ "ERROR": "Can not find user!!" });
+
+        newFollowing.following.push(req.params.userId);
+        await newFollowing.save();
+
+        const newFollower = await User.findOne({ _id: req.params.userId });
+
+        if (!newFollower) return res.status(400).json({ "ERROR": "Can not find user!!" });
+
+        newFollower.followers.push(req.user.id);
+        await newFollower.save();
+
+        const updatedUser = await newFollowing
+            .populate('following', '-password')
+        // .populate('followers', '-password');
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        return res.status(500).json({ "ERROR": `Internal server error while following :: ${error}` });
+    }
+});
+
+//Unfollow User :
+userRouter.put('/unfollow/:userId', userLogedIn, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.userId)) return res.status(400).json({ "ERROR": "Invalid user id!!" });
+
+        if (req.params.userId == req.user.id) return res.status(400).json({ "ERROR": "You can not unfollow your self!!" });
+
+        const user = await User.findOne({ _id: req.user.id });
+
+        if (!user) return res.status(400).json({ "ERROR": "can not find user!!" });
+        
+        for(i in user.following){
+            if(user.following[i] == req.params.userId){
+                user.following.splice(i, 1);
+                await user.save();
+                const updatedUser = await user.populate('following', '-password');
+                return res.status(200).json(updatedUser);
+            }
+        }
+
+        res.status(401).json({ "Message": "you are not following this user!!" });
+    } catch (error) {
+        return res.status(500).json({ "ERROR": `Internal server error while following :: ${error}` });
+    }
+});
+
+//Remove Follower :
+userRouter.put('/removefollower/:userId', userLogedIn, async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.userId)) return res.status(400).json({ "ERROR": "Invalid user id!!" });
+
+        if (req.params.userId == req.user.id) return res.status(400).json({ "ERROR": "You can not unfollow your self!!" });
+
+        const user = await User.findOne({ _id: req.user.id });
+
+        if (!user) return res.status(400).json({ "ERROR": "can not find user!!" });
+        
+        for(i in user.followers){
+            if(user.followers[i] == req.params.userId){
+                user.followers.splice(i, 1);
+                await user.save();
+                const updatedUser = await user.populate('followers', '-password');
+                return res.status(200).json(updatedUser);
+            }
+        }
+
+        res.status(401).json({ "Message": "you have not this follower!!" });
+    } catch (error) {
+        return res.status(500).json({ "ERROR": `Internal server error while removing follower :: ${error}` });
+    }
+});
 
 module.exports = userRouter;
