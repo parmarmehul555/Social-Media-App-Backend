@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const chatSchema = mongoose.Schema({
-    groupName:{
+    name:{
         type:String,
         trim:true,
         required:true
@@ -18,6 +18,10 @@ const chatSchema = mongoose.Schema({
     latestMessage:{
         type : mongoose.Schema.Types.ObjectId,
         ref:'Message'
+    },
+    groupImage:{
+        type:String,
+        default:'https://res.cloudinary.com/de0punalk/image/upload/v1707397450/paslibbfdsgtyxe5rqhu.png'
     },
     groupAdmin: {
         type: mongoose.Schema.Types.ObjectId,

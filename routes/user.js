@@ -71,7 +71,7 @@ userRouter.get('/userdetails', userLogedIn, async (req, res) => {
 
         if (!isUser) return res.status(404).json("User not found!!");
 
-        res.status(200).json({ "User": isUser });
+        res.status(200).json({isUser});
     } catch (error) {
         return res.status(500).json({ "ERROR": `Internal server error :: ${error}` });
     }
@@ -163,6 +163,7 @@ userRouter.put('/follow/:userId', userLogedIn, async (req, res) => {
         if (!newFollowing) return res.status(400).json({ "ERROR": "Can not find user!!" });
 
         newFollowing.following.push(req.params.userId);
+        newFollowing.followingCount = newFollowing.following.length;
         await newFollowing.save();
 
         const newFollower = await User.findOne({ _id: req.params.userId });
@@ -170,6 +171,7 @@ userRouter.put('/follow/:userId', userLogedIn, async (req, res) => {
         if (!newFollower) return res.status(400).json({ "ERROR": "Can not find user!!" });
 
         newFollower.followers.push(req.user.id);
+        newFollower.followerCount = newFollower.followers.length;
         await newFollower.save();
 
         const updatedUser = await newFollowing
@@ -191,10 +193,11 @@ userRouter.put('/unfollow/:userId', userLogedIn, async (req, res) => {
         const user = await User.findOne({ _id: req.user.id });
 
         if (!user) return res.status(400).json({ "ERROR": "can not find user!!" });
-        
-        for(i in user.following){
-            if(user.following[i] == req.params.userId){
+
+        for (i in user.following) {
+            if (user.following[i] == req.params.userId) {
                 user.following.splice(i, 1);
+                user.followingCount = user.following.length;
                 await user.save();
                 const updatedUser = await user.populate('following', '-password');
                 return res.status(200).json(updatedUser);
@@ -217,10 +220,11 @@ userRouter.put('/removefollower/:userId', userLogedIn, async (req, res) => {
         const user = await User.findOne({ _id: req.user.id });
 
         if (!user) return res.status(400).json({ "ERROR": "can not find user!!" });
-        
-        for(i in user.followers){
-            if(user.followers[i] == req.params.userId){
+
+        for (i in user.followers) {
+            if (user.followers[i] == req.params.userId) {
                 user.followers.splice(i, 1);
+                user.followerCount = user.followers.length;
                 await user.save();
                 const updatedUser = await user.populate('followers', '-password');
                 return res.status(200).json(updatedUser);

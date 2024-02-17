@@ -32,6 +32,14 @@ const userSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User' 
     }],
+    followingCount:{
+        type : Number,
+        default:0
+    },
+    followerCount:{
+        type : Number,
+        default:0
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
