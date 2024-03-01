@@ -8,8 +8,6 @@ const { Server } = require('socket.io');
 const messaageRouter = require('./routes/message');
 const dotenv = require('dotenv').config();
 
-
-let expressServer;
 connectDB()
     .then(() => {
         const app = express();
@@ -44,17 +42,22 @@ connectDB()
             });
 
             socket.on('typing',(chatId)=>{
-                socket.except(chatId).emit('typing');
+                console.log("===================",chatId);
+                socket.broadcast.in(chatId).emit('typing');
             })
 
             socket.on('stop typing',(chatId)=>{
-                socket.except(chatId).emit('stop typing');
+                console.log("===================",chatId);
+                socket.broadcast.in(chatId).emit('stop typing');
             })
+
+            socket.on('send comment',(comment)=>{
+                io.emit('new comment',comment);
+            })
+
         })
 
     }).catch((error) => {
         console.log(`app buliding failed ${error}`);
         process.exit(1);
     })
-
-module.exports = expressServer;

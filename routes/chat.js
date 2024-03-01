@@ -42,7 +42,22 @@ chatRouter.get('/fetchchats', userLogedIn, async (req, res) => {
     } catch (error) {
         return res.status(500).json(error.message);
     }
-})
+});
+
+//GET Existing Chat :
+chatRouter.get('/existingchat/:chatId', userLogedIn, async (req, res) => {
+    try {
+        const { chatId } = req.params;
+
+        if (!chatId) return res.status(401).json({ "ERROR": "please enter all data!!" });
+
+        const myChat = await Chat.findOne({ _id: chatId }).populate('receivers', '-password');
+
+        res.status(200).send(myChat);
+    } catch (error) {
+        return res.status(500).json(error.message);
+    }
+});
 
 //create group : 
 chatRouter.post('/creategroup', userLogedIn, async (req, res) => {
