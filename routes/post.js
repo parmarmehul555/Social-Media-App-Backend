@@ -7,7 +7,7 @@ const Post = require('../model/Post');
 const mongoose = require('mongoose');
 const Comment = require('../model/Comment');
 
-//create new post :
+//create new post : 
 postRouter.post('/createpost', userLogedIn, upload.single('my-post'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ "ERROR": "File not found!!" });
@@ -28,6 +28,7 @@ postRouter.post('/createpost', userLogedIn, upload.single('my-post'), async (req
     }
 });
 
+//Get post by id: For user profile page ==>> Post details
 postRouter.get('/getpost/:postId',userLogedIn,async (req,res)=>{
     try {
         const post = await Post.findOne({_id:req.params.postId});

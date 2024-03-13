@@ -60,31 +60,59 @@ chatRouter.get('/existingchat/:chatId', userLogedIn, async (req, res) => {
 });
 
 //create group : 
-chatRouter.post('/creategroup', userLogedIn, async (req, res) => {
+chatRouter.post('/creategroup', userLogedIn, upload.single('group-img'), async (req, res) => {
+    console.log("=====================", req.body);
     try {
-        if (!(req.body.groupName)) return res.status(400).send("Can not create group!!");
+        if (req.file) {
+            if (!(req.body.groupName)) return res.status(400).send("Can not create group!!");
 
-        let groupMembers = await JSON.parse(req.body.groupMembers);
+            let groupMembers = await JSON.parse(req.body.groupMembers);
 
-        groupMembers.push(req.user.id);
+            groupMembers.push(req.user.id);
 
-        if (groupMembers.length > 2) {
+            const groupImage = await uploadCloudinary(req.file.path);
 
-            const newGroup = await new Chat({
-                groupName: req.body.groupName,
-                isGroupChat: true,
-                groupAdmin: req.user.id,
-                receivers: groupMembers,
-            })
-            await newGroup.save();
-            const fullNewGroup = await Chat.find({ _id: newGroup._id })
-                .populate("receivers", "-password")
-                .populate("groupAdmin", "-password")
+            if (groupMembers.length > 2) {
+                const newGroup = await new Chat({
+                    name: req.body.groupName,
+                    isGroupChat: true,
+                    groupAdmin: req.user.id,
+                    receivers: groupMembers,
+                    groupImage
+                })
+                await newGroup.save();
+                const fullNewGroup = await Chat.find({ _id: newGroup._id })
+                    .populate("receivers", "-password")
+                    .populate("groupAdmin", "-password")
 
-            res.status(200).json(fullNewGroup);
+                res.status(200).json(fullNewGroup);
+            }
+        }
+        else {
+            if (!(req.body.groupName)) return res.status(400).send("Can not create group!!");
+
+            let groupMembers = await JSON.parse(req.body.groupMembers);
+
+            groupMembers.push(req.user.id);
+
+            if (groupMembers.length > 2) {
+                const newGroup = await new Chat({
+                    name: req.body.groupName,
+                    isGroupChat: true,
+                    groupAdmin: req.user.id,
+                    receivers: groupMembers,
+
+                })
+                await newGroup.save();
+                const fullNewGroup = await Chat.find({ _id: newGroup._id })
+                    .populate("receivers", "-password")
+                    .populate("groupAdmin", "-password")
+
+                res.status(200).json(fullNewGroup);
+            }
         }
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         return res.status(500).json(error.message);
     }
 })
@@ -121,11 +149,9 @@ chatRouter.put('/addgroupmember', userLogedIn, async (req, res) => {
 })
 
 //remove group member : 
-chatRouter.delete('/removegroupmember/:deleteId', userLogedIn, async (req, res) => {
+chatRouter.delete('/removegroupmember/:deleteId-:chatId', userLogedIn, async (req, res) => {
     try {
-        const { chatId } = req.body;
-
-        const isChat = await Chat.findOne({ _id: chatId });
+        const isChat = await Chat.findOne({ _id: req.params.chatId });
 
         if (!isChat) return res.status(401).json("Group not found!!");
 
@@ -135,7 +161,6 @@ chatRouter.delete('/removegroupmember/:deleteId', userLogedIn, async (req, res) 
                 break;
             }
         }
-
         await isChat.save();
         res.status(200).send("Member deleted successfully!!");
     } catch (error) {
@@ -172,6 +197,17 @@ chatRouter.put('/updategroup/:chatId', userLogedIn, upload.single('group-profile
         console.log(error);
         return res.status(500).json(error);
     }
-})
+});
+
+//GET all members of group 
+chatRouter.get('/getallmembers/:groupId', userLogedIn, async (req, res) => {
+    try {
+        console.log(req.params.groupId);
+        const groupMembrs = await Chat.findOne({ _id: req.params.groupId }).populate('receivers','-password');
+        res.status(200).send(groupMembrs);
+    } catch (error) {
+        return res.status(500).json({ "ERROR": "Internal server error ==>> ", error });
+    }
+});
 
 module.exports = chatRouter

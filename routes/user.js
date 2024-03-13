@@ -71,7 +71,7 @@ userRouter.get('/userdetails', userLogedIn, async (req, res) => {
 
         if (!isUser) return res.status(404).json("User not found!!");
 
-        res.status(200).json({isUser});
+        res.status(200).json({ isUser });
     } catch (error) {
         return res.status(500).json({ "ERROR": `Internal server error :: ${error}` });
     }
@@ -236,5 +236,20 @@ userRouter.put('/removefollower/:userId', userLogedIn, async (req, res) => {
         return res.status(500).json({ "ERROR": `Internal server error while removing follower :: ${error}` });
     }
 });
+
+//get All user which is followed by LOGED IN user:
+userRouter.get('/getAllmyUsers', userLogedIn, async (req, res) => {
+    try {
+        const user = await User.findOne({ _id: req.user.id });
+
+        if (!user) return res.status(400).json({ "ERROR": "User not found!!" });
+
+        const data = await user.populate('following')
+
+        res.status(200).json(user);
+    } catch (error) {
+        return res.status(500).json({ "ERROR": "Internal server error " + error });
+    }
+})
 
 module.exports = userRouter;
