@@ -6,6 +6,7 @@ const chatRouter = require('./routes/chat');
 const postRouter = require('./routes/post');
 const { Server } = require('socket.io');
 const messaageRouter = require('./routes/message');
+const adminRouter = require('./routes/admin');
 const dotenv = require('dotenv').config();
 
 connectDB()
@@ -20,6 +21,7 @@ connectDB()
         app.use('/user/chat', chatRouter);
         app.use('/user/post', postRouter);
         app.use('/user/oldchat', messaageRouter);
+        app.use('/admin',adminRouter);
 
         expressServer = app.listen(process.env.PORT || 2005, () => {
             console.log(`Server started @ ${process.env.PORT || 2005}`);
@@ -42,12 +44,10 @@ connectDB()
             });
 
             socket.on('typing',(chatId)=>{
-                console.log("===================",chatId);
                 socket.broadcast.in(chatId).emit('typing');
             })
 
             socket.on('stop typing',(chatId)=>{
-                console.log("===================",chatId);
                 socket.broadcast.in(chatId).emit('stop typing');
             })
 

@@ -16,18 +16,23 @@ const postSchema = mongoose.Schema({
         userLiked: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User'
+                ref: 'User',
+                isLiked: {
+                    type: Boolean,
+                    required: true,
+                    default: false
+                }
             }
         ],
-        likeCount:{
-            type : Number,
-            default : 0
+        likeCount: {
+            type: Number,
+            default: 0
         }
     },
-    postComments:[{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Comment'
+    postComments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
     }]
-},{timestamps:true});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Post', postSchema);

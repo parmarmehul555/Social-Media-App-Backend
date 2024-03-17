@@ -244,7 +244,10 @@ userRouter.get('/getAllmyUsers', userLogedIn, async (req, res) => {
 
         if (!user) return res.status(400).json({ "ERROR": "User not found!!" });
 
-        const data = await user.populate('following')
+        // const data = await user.populate('following').populate('followers');
+
+        await User.populate(user,{path:'following'});
+        await User.populate(user,{path:'followers'});
 
         res.status(200).json(user);
     } catch (error) {

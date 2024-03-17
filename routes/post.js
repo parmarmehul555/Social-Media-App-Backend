@@ -29,11 +29,11 @@ postRouter.post('/createpost', userLogedIn, upload.single('my-post'), async (req
 });
 
 //Get post by id: For user profile page ==>> Post details
-postRouter.get('/getpost/:postId',userLogedIn,async (req,res)=>{
+postRouter.get('/getpost/:postId', userLogedIn, async (req, res) => {
     try {
-        const post = await Post.findOne({_id:req.params.postId});
+        const post = await Post.findOne({ _id: req.params.postId });
 
-        if(!post) return res.status(400).json({"ERROR":"Can not find post!!"});
+        if (!post) return res.status(400).json({ "ERROR": "Can not find post!!" });
 
         res.status(200).send(post);
     } catch (error) {
@@ -108,27 +108,28 @@ postRouter.put('/addlikesorcomments/:postId', userLogedIn, async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.postId)) return res.status(400).json({ "ERROR": "Can not find post" });
 
         const userPost = await Post.findById(req.params.postId);
-        console.log(userPost);
 
         if (!userPost) return res.status(400).json({ "ERROR": "Can not find post!!" });
-
         if (userId && !commentData) {
+            console.log("arrived!!");
             await userPost.postLikes.userLiked.push(userId);
+            // await userPost.postLikes.userLiked[(userPost.postLikes.userLiked.length)-1];
             userPost.postLikes.likeCount = (userPost.postLikes.userLiked.length);
-
+            
             await userPost.save();
-
+            
             if (userPost.postComments.length > 0) {
                 const fullUpdatedPost = await userPost
                     .populate({ path: 'postLikes.userLiked', select: '-password' })
                 // .populate('postComments');
-
+                
                 return res.status(200).send(fullUpdatedPost);
             }
             else {
                 const fullUpdatedPost = await userPost
-                    .populate({ path: 'postLikes.userLiked', select: '-password' });
-
+                .populate({ path: 'postLikes.userLiked', select: '-password' });
+                console.log(fullUpdatedPost);
+                
                 return res.status(200).send(fullUpdatedPost);
             }
         }
